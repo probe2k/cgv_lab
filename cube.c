@@ -1,12 +1,35 @@
 #include <stdio.h>
-#include <math.h>
 #include <GL/glut.h>
+#include <math.h>
 
-int d = 0;
+GLfloat V[8][3] = { { -0.5, 0.5, 0.5 },
+					{ 0.5, 0.5, 0.5 },
+					{ 0.5, -0.5, 0.5 },
+					{ -0.5, -0.5, 0.5 },
+					{ -0.5, 0.5, -0.5 },
+					{ 0.5, 0.5, -0.5 },
+					{ 0.5, -0.5, -0.5 },
+					{ -0.5, -0.5, -0.5 } };
 
-void spinCube() {
-	d++;
+int t[] = {0, 0, 0};
+int ax = 2;
+
+void spincube() {
+	t[ax] += 1;
+	if (t[ax] == 360)
+		t[ax] -= 360;
 	glutPostRedisplay();
+}
+
+void mouse(int btn, int state, int x, int y) {
+	if (btn == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+		ax = 0;
+
+	if (btn == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
+		ax = 1;
+
+	if (btn == GLUT_MIDDLE_BUTTON && state == GLUT_DOWN)
+		ax = 2;
 }
 
 void drawFace(GLfloat A[], GLfloat B[], GLfloat C[], GLfloat D[]) {
@@ -18,49 +41,37 @@ void drawFace(GLfloat A[], GLfloat B[], GLfloat C[], GLfloat D[]) {
 	glEnd();
 }
 
-void drawCube(GLfloat V0[], GLfloat V1[], GLfloat V2[], GLfloat V3[], GLfloat V4[], GLfloat V5[], GLfloat V6[], GLfloat V7[]) {
+void drawCube() {
 	glColor3f(1, 0, 0);
-	drawFace(V0, V1, V2, V3);
+	drawFace(V[0], V[1], V[2], V[3]);
 	glColor3f(0, 1, 0);
-	drawFace(V4, V5, V6, V7);
+	drawFace(V[4], V[5], V[6], V[7]);
 	glColor3f(0, 0, 1);
-	drawFace(V4, V0, V3, V7);
+	drawFace(V[4], V[0], V[3], V[7]);
 	glColor3f(1, 0, 1);
-	drawFace(V4, V5, V1, V0);
+	drawFace(V[4], V[5], V[1], V[0]);
 	glColor3f(1, 1, 0);
-	drawFace(V7, V3, V2, V6);
+	drawFace(V[7], V[3], V[2], V[6]);
 	glColor3f(0, 1, 1);
-	drawFace(V5, V1, V2, V6);
+	drawFace(V[5], V[1], V[2], V[6]);
 }
 
 void display() {
-	GLfloat V[8][3] = { {-0.5, 0.5, 0.5},
-						{0.5, 0.5, 0.5},
-						{0.5, -0.5, 0.5},
-						{-0.5, -0.5, 0.5},
-						{-0.5, 0.5, -0.5},
-						{0.5, 0.5, -0.5},
-						{0.5, -0.5, -0.5},
-						{-0.5, -0.5, -0.5} };
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
-	GLfloat rV[8][3];
-
-	GLfloat r = 45 * 3.14 / 180;
-
-	for (int i = 0; i < 8; i++) {
-		rV[i][1] = V[i][1] * cos(10 * 3.14 / 180) - V[i][2] * sin(10 * 3.14 / 180);
-		rV[i][2] = V[i][1] * sin(10 * 3.14 / 180) + V[i][2] * cos(10 * 3.14 / 180);
-		rV[i][0] = V[i][0];
-	}
-
-	drawCube(rV[0], rV[1], rV[2], rV[3], rV[4], rV[5], rV[6], rV[7]);
-
+	glLoadIdentity();
+	glRotatef(t[0], 1, 0, 0);
+	glRotatef(t[1], 0, 1, 0);
+	glRotatef(t[2], 0, 0, 1);
+	drawCube();
 	glutSwapBuffers();
+
 	glFlush();
 }
 
 void init() {
+	glMatrixMode(GL_PROJECTION);
+	glOrtho(-4, 4, -4, 4, -10, 10);
+	glMatrixMode(GL_MODELVIEW);
 	glClearColor(0, 0, 0, 1);
 	glEnable(GL_DEPTH_TEST);
 }
@@ -68,12 +79,13 @@ void init() {
 int main(int argc, char **argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-	glutInitWindowPosition(20, 20);
 	glutInitWindowSize(500, 500);
+	glutInitWindowPosition(200, 200);
 	glutCreateWindow("Cube");
 	init();
+	glutIdleFunc(spincube);
+	glutMouseFunc(mouse);
 	glutDisplayFunc(display);
-	glutIdleFunc(spinCube);
 	glutMainLoop();
-	return 0;
+	return 1;
 }
